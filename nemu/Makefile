@@ -8,7 +8,6 @@ endif
 -include $(NEMU_HOME)/include/config/auto.conf.cmd
 
 remove_quote = $(patsubst "%",%,$(1))
-
 # Extract variabls from menuconfig
 GUEST_ISA ?= $(call remove_quote,$(CONFIG_ISA))
 ENGINE ?= $(call remove_quote,$(CONFIG_ENGINE))
