@@ -32,9 +32,23 @@ static int cmd_c(char *args) {
   return 0;
 }
 
-
 static int cmd_q(char *args) {
   return -1;
+}
+
+static int cmd_si(char *args) {
+  char* str = strtok(args, " ");
+  int n = 1;
+  if (str) n = atoi(str);
+  if (n > 0) cpu_exec(n);
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  char* str = strtok(args, " ");
+  if (strcmp(str, "r") == 0) isa_reg_display();
+  else if (strcmp(str, "w") == 0) ;
+  return 0;
 }
 
 static int cmd_help(char *args);
@@ -49,6 +63,8 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
+  { "si", "execute n steps", cmd_si },
+  { "info", "print info", cmd_info },
 
 };
 

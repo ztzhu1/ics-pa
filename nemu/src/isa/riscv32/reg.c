@@ -9,6 +9,14 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  int col = 8;
+  int row = 4;
+   for (int i = 0; i < row; i++) {
+     for (int j = 0; j < col; j++) {
+      printf("%-4s", regs[i * col + j]);
+    }
+    printf("\n");
+  }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
