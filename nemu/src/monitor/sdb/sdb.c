@@ -33,6 +33,7 @@ static int cmd_c(char *args) {
 }
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
@@ -51,6 +52,22 @@ static int cmd_info(char *args) {
   return 0;
 }
 
+static int cmd_x(char *args) {
+  char *n_str = strtok(args, " ");
+  char *exp = n_str + strlen(n_str) + 1; 
+  int n = atoi(n_str);
+  uint8_t pmem_start;
+  uint8_t pmem_end;
+  sscanf(exp, "%hhx", &pmem_start);
+  pmem_end = pmem_start + 4 * n - 1;
+  printf("start position: 0x%08x\n", pmem_start);
+  printf("end position:   0x%08x\n", pmem_end);
+  for (int i = 0; i < n; i++) {
+    i++;
+  }
+  return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -65,6 +82,7 @@ static struct {
   /* TODO: Add more commands */
   { "si", "execute n steps", cmd_si },
   { "info", "print info", cmd_info },
+  { "x", "scan memory", cmd_x },
 
 };
 
