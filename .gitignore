@@ -11,3 +11,7 @@
 !init.sh
 /fceux-am
 /am-kernels
+*.pdf
+manuals
+tags
+.test
