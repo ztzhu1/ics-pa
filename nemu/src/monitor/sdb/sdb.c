@@ -1,5 +1,6 @@
 #include <isa.h>
 #include <cpu/cpu.h>
+#include <cpu/decode.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
@@ -56,14 +57,18 @@ static int cmd_x(char *args) {
   char *n_str = strtok(args, " ");
   char *exp = n_str + strlen(n_str) + 1; 
   int n = atoi(n_str);
-  uint8_t pmem_start;
-  uint8_t pmem_end;
-  sscanf(exp, "%hhx", &pmem_start);
-  pmem_end = pmem_start + 4 * n - 1;
-  printf("start position: 0x%08x\n", pmem_start);
-  printf("end position:   0x%08x\n", pmem_end);
+  paddr_t pc;
+  sscanf(exp, "%x", &pc);
+
+  uint8_t* guest_to_host(paddr_t paddr); 
   for (int i = 0; i < n; i++) {
-    i++;
+    uint8_t *instr_start = guest_to_host(pc);
+    word_t instr_val = *(uint32_t *) instr_start;
+    uint8_t *instr = (uint8_t *)&instr_val;
+    for (int j = 0; j < 4; j++) 
+      printf("%02x ", instr[j]);
+    printf("\n");
+    pc += 4;
   }
   return 0;
 }
