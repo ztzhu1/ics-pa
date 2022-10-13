@@ -39,17 +39,15 @@ static int cmd_q(char *args) {
 }
 
 static int cmd_si(char *args) {
-  char* str = strtok(args, " ");
   int n = 1;
-  if (str) n = atoi(str);
+  if (strlen(args) != 0) n = atoi(args);
   if (n > 0) cpu_exec(n);
   return 0;
 }
 
 static int cmd_info(char *args) {
-  char* str = strtok(args, " ");
-  if (strcmp(str, "r") == 0) isa_reg_display();
-  else if (strcmp(str, "w") == 0) ;
+  if (strcmp(args, "r") == 0) isa_reg_display();
+  else if (strcmp(args, "w") == 0) ;
   return 0;
 }
 
@@ -58,7 +56,7 @@ static int cmd_x(char *args) {
   char *exp = n_str + strlen(n_str) + 1; 
   int n = atoi(n_str);
   paddr_t pc;
-  sscanf(exp, "%x", &pc);
+  pc = expr(exp, NULL);
 
   uint8_t* guest_to_host(paddr_t paddr); 
   for (int i = 0; i < n; i++) {
@@ -70,6 +68,11 @@ static int cmd_x(char *args) {
     printf("\n");
     pc += 4;
   }
+  return 0;
+}
+
+static int cmd_p(char *args) {
+  printf("%d\n", expr(args, NULL));
   return 0;
 }
 
@@ -88,6 +91,7 @@ static struct {
   { "si", "execute n steps", cmd_si },
   { "info", "print info", cmd_info },
   { "x", "scan memory", cmd_x },
+  { "p", "calculate expression value", cmd_p },
 
 };
 
