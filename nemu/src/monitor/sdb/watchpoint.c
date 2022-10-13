@@ -7,6 +7,7 @@ typedef struct watchpoint {
   struct watchpoint *next;
 
   /* TODO: Add more members if necessary */
+  char *expression;
 
 } WP;
 
@@ -18,68 +19,86 @@ void init_wp_pool() {
   for (i = 0; i < NR_WP; i ++) {
     wp_pool[i].NO = i;
     wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
+    wp_pool[i].expression = NULL;
   }
 
   head = NULL;
   free_ = wp_pool;
 }
 
+bool isTail(WP *p) {
+  return p->next == NULL;
+}
+
 /* TODO: Implement the functionality of watchpoint */
-WP* new_wp() {
+WP* new_wp(char *expression) {
   if (!free_) {
     printf("There is no free watchpoint!");
     exit(-1);
   }
   WP *p_free = free_;
-  if (!free_->next) {
-    free_ = NULL;
-  }
-  else {
-    while(1) {
-      if (!p_free->next->next) {
-        WP *p = p_free;
-        p_free = p_free->next;
-        p->next = NULL;
-        break;
-      }
-    }
-  }
+  free_ = free_->next;
+  p_free->next = NULL;
 
-  WP *p_head = head;
-  if (!p_head)
-    p_head = p_free;
+  if (!head)
+    head = p_free;
   else {
-    while(p_head->next)
+    WP *p_head = head;
+    while(!isTail(p_head))
       p_head = p_head->next;
     p_head->next = p_free;
   }
+  p_free->expression = (char *) malloc(strlen(expression) + 1);
+  strcpy(p_free->expression, expression);
   return p_free;
 }
 
 void free_wp(WP *wp) {
   WP *p_free = free_;
-  while (p_free->next)
+  while (!isTail(p_free))
     p_free = p_free->next;
 
-  WP *p_head = head;
-  if (wp == p_head) {
-    wp->next = NULL;
+  if (wp == head) {
     p_free->next = wp;
-    head = p_head->next;
+    head = head->next;
   }
   else {
-    while (p_head->next != wp && !p_head->next)
+    WP *p_head = head;
+    while (p_head && p_head->next != wp)
       p_head = p_head->next;
-    if (!p_head->next) {
-      printf("wp is already free!\n");
+    if (!p_head) {
+      printf("wp%d is already free!\n", wp->NO);
       exit(-1);
     }
     p_head->next = wp->next;
-    wp->next = NULL;
     p_free->next = wp;
   }
+  wp->next = NULL;
+  if (wp->expression) free(wp->expression);
+  wp->expression = NULL;
 }
 
 WP *getWP(int index) {
   return wp_pool + index;
+}
+
+void wp_display() {
+  printf("using:\n");
+  for (int i = 0; i < NR_WP; i++) {
+    if (wp_pool[i].expression)
+      printf("wp%-2d: %s\n", i, wp_pool[i].expression);
+  }  
+
+  printf("free:\n");
+  int count = 0;
+  for (int i = 0; i < NR_WP; i++) {
+    if (!wp_pool[i].expression) {
+      printf("wp%-2d ", i);
+      count++;
+    }
+    if (count % 4 == 0 && count != 0)
+      printf("\n");
+  }  
+  if (count % 4 != 0)
+    printf("\n");
 }

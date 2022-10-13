@@ -40,14 +40,15 @@ static int cmd_q(char *args) {
 
 static int cmd_si(char *args) {
   int n = 1;
-  if (strlen(args) != 0) n = atoi(args);
+  if (args) n = atoi(args);
   if (n > 0) cpu_exec(n);
   return 0;
 }
 
+void wp_display();
 static int cmd_info(char *args) {
   if (strcmp(args, "r") == 0) isa_reg_display();
-  else if (strcmp(args, "w") == 0) ;
+  else if (strcmp(args, "w") == 0) wp_display();
   return 0;
 }
 
@@ -76,6 +77,29 @@ static int cmd_p(char *args) {
   return 0;
 }
 
+typedef struct watchpoint {
+  int NO;
+  struct watchpoint *next;
+  char *expression;
+} WP;
+
+WP* new_wp(char *expression);
+WP *getWP(int index);
+void free_wp(WP *wp);
+
+static int cmd_w(char *args) {
+  WP *wp = new_wp(args);
+  printf("wp%d is watching \"%s\"\n", wp->NO, wp->expression);
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  WP *wp = getWP(atoi(args));
+  free_wp(wp);
+  printf("wp%d is free.\n", wp->NO);
+  return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -92,7 +116,8 @@ static struct {
   { "info", "print info", cmd_info },
   { "x", "scan memory", cmd_x },
   { "p", "calculate expression value", cmd_p },
-
+  { "w", "create watchpoint", cmd_w },
+  { "d", "delete watchpoint", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
