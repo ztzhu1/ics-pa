@@ -8,9 +8,9 @@
 enum {
   TK_NOTYPE = 256,
   /* TODO: Add more token types */
-  _BOP_START, TK_EQ, TK_NE, TK_AND,
-  TK_MUL, TK_DIVIDE,
-  TK_PLUS, TK_MINUS, _BOP_END, // binary operand
+  _BOP_START, TK_EQ, TK_NE, TK_AND, // binary operand
+  TK_PLUS, TK_MINUS,   
+  TK_MUL, TK_DIVIDE, _BOP_END,
   TK_HEX, TK_REG, TK_DEREF,
   TK_LP, TK_RP, TK_NUM,
 };
@@ -27,15 +27,16 @@ static struct rule {
   {" +", TK_NOTYPE},    // spaces
   {"\\+", TK_PLUS},         // plus
   {"-", TK_MINUS},         // minus
+  {"\\*0x[0-9a-fA-F]+", TK_DEREF},         // dereference 
   {"\\*", TK_MUL},         // multiply
   {"/", TK_DIVIDE},         // divide
   {"==", TK_EQ},        // equal
   {"!=", TK_NE},        // not equal
   {"\\(", TK_LP},         // left parenthesis
   {"\\)", TK_RP},         // right parenthesis
-  {"0x[0-9a-fA-F]*", TK_HEX},         // hexadecimal
+  {"0x[0-9a-fA-F]+", TK_HEX},         // hexadecimal
   {"([1-9][0-9]*)|(0[^0-9]*)", TK_NUM},   // number
-  {"\\$[a-z0-9]*", TK_REG},         // register
+  {"\\$[a-z0-9]+", TK_REG},         // register
   {"&&", TK_AND},         // and 
 };
 
@@ -83,16 +84,12 @@ static bool make_token(char *e) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
+        // if token includes "*0x..."
+        if (nr_token != 0 && (tokens[nr_token - 1].type == TK_NUM || tokens[nr_token - 1].type == TK_RP))
+          substr_len = 1;
         // if the number is 0
         if (rules[i].token_type == TK_NUM && substr_start[0] == '0')
           substr_len = 1;
-        // if "*"
-        if (rules[i].token_type == TK_MUL) {
-          // whether "*" denotes dereference
-          if (nr_token == 0 || (tokens[nr_token - 1].type != TK_NUM && tokens[nr_token - 1].type != TK_RP)) {
-            rules[i].token_type = TK_DEREF;
-          }
-        }
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
@@ -103,15 +100,16 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
-        switch (rules[i].token_type) {
-          case TK_NOTYPE: break;
-          default:
+        if (rules[i].token_type != TK_NOTYPE) {
+          if (rules[i].token_type == TK_DEREF && substr_len == 1)
+            tokens[nr_token].type = TK_MUL;
+          else
             tokens[nr_token].type = rules[i].token_type;
-            int size = substr_len + 1;
-            tokens[nr_token].str = (char *) malloc(size);
-            strncpy(tokens[nr_token].str, substr_start, substr_len);
-            strcpy(tokens[nr_token].str + substr_len, "\0");
-            nr_token++;
+          int size = substr_len + 1;
+          tokens[nr_token].str = (char *) malloc(size);
+          strncpy(tokens[nr_token].str, substr_start, substr_len);
+          strcpy(tokens[nr_token].str + substr_len, "\0");
+          nr_token++;
         }
         break;
       }
@@ -149,6 +147,8 @@ bool check_parentheses(int start, int end) {
   return false;
 }
 
+word_t vaddr_read(vaddr_t addr, int len);
+
 word_t expr_substr(int start, int end/*, bool *success*/) {
   word_t val = 0;
   if (start > end) {
@@ -165,8 +165,9 @@ word_t expr_substr(int start, int end/*, bool *success*/) {
           val = isa_reg_str2val(tokens[start].str + 1, NULL);
           break;
       case TK_DEREF:
-        printf("Not Implemented.\n");
-        exit(-1);
+        uint32_t addr;
+        sscanf(tokens[start].str + 1, "%x", &addr);
+        val = vaddr_read(addr, 4);
         break;
     }
   } else if (check_parentheses(start, end) == true) {
