@@ -45,9 +45,11 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   }
   if (idx < 32) {
     val = cpu.gpr[idx]._32;
-    *success = true;
+    if (success != NULL)
+      *success = true;
+  } else {
+    if (success != NULL)
+      *success = false;
   }
-  else
-    *success = false;
   return val;
 }
