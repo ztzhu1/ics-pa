@@ -6,10 +6,13 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
-
+  TK_NOTYPE = 256,
   /* TODO: Add more token types */
-  TK_PLUS, TK_MINUS, TK_MUL, TK_DIVIDE, TK_LP, TK_RP, TK_NUM
+  _BOP_START, TK_EQ, TK_NE, TK_AND,
+  TK_MUL, TK_DIVIDE,
+  TK_PLUS, TK_MINUS, _BOP_END, // binary operand
+  TK_HEX, TK_REG, TK_DEREF,
+  TK_LP, TK_RP, TK_NUM,
 };
 
 static struct rule {
@@ -27,10 +30,16 @@ static struct rule {
   {"\\*", TK_MUL},         // multiply
   {"/", TK_DIVIDE},         // divide
   {"==", TK_EQ},        // equal
+  {"!=", TK_NE},        // not equal
   {"\\(", TK_LP},         // left parenthesis
   {"\\)", TK_RP},         // right parenthesis
+  {"0x[0-9a-fA-F]*", TK_HEX},         // hexadecimal
   {"([1-9][0-9]*)|(0[^0-9]*)", TK_NUM},   // number
+  {"\\$[a-z0-9]*", TK_REG},         // register
+  {"&&", TK_AND},         // and 
 };
+
+word_t isa_reg_str2val(const char *s, bool *success);
 
 #define NR_REGEX ARRLEN(rules)
 
@@ -74,8 +83,16 @@ static bool make_token(char *e) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
+        // if the number is 0
         if (rules[i].token_type == TK_NUM && substr_start[0] == '0')
           substr_len = 1;
+        // if "*"
+        if (rules[i].token_type == TK_MUL) {
+          // whether "*" denotes dereference
+          if (nr_token == 0 || (tokens[nr_token - 1].type != TK_NUM && tokens[nr_token - 1].type != TK_RP)) {
+            rules[i].token_type = TK_DEREF;
+          }
+        }
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
@@ -96,7 +113,6 @@ static bool make_token(char *e) {
             strcpy(tokens[nr_token].str + substr_len, "\0");
             nr_token++;
         }
-
         break;
       }
     }
@@ -138,7 +154,21 @@ word_t expr_substr(int start, int end/*, bool *success*/) {
   if (start > end) {
     // *success = false;
   } else if (start == end) {
-    val = atoi(tokens[start].str);
+    switch (tokens[start].type) {
+      case TK_NUM:
+        val = atoi(tokens[start].str);
+        break;
+      case TK_HEX:
+        sscanf(tokens[start].str, "%x", &val);
+        break;
+      case TK_REG:
+          val = isa_reg_str2val(tokens[start].str + 1, NULL);
+          break;
+      case TK_DEREF:
+        printf("Not Implemented.\n");
+        exit(-1);
+        break;
+    }
   } else if (check_parentheses(start, end) == true) {
     val = expr_substr(start + 1, end - 1);
   } else {
@@ -146,18 +176,15 @@ word_t expr_substr(int start, int end/*, bool *success*/) {
     int op = start;
     int master_op = start;
     while (op <= end) {
-      if (tokens[op].type == TK_LP) in_parentheses = true;
-      else if (tokens[op].type == TK_RP) in_parentheses = false;
+      int op_type = tokens[op].type;
+      int master_op_type = tokens[master_op].type;
+      if (op_type == TK_LP) in_parentheses = true;
+      else if (op_type == TK_RP) in_parentheses = false;
       else if (!in_parentheses){
-        if (tokens[op].type == TK_PLUS || tokens[op].type == TK_MINUS) {
+        if (op_type > _BOP_START && op_type < _BOP_END && master_op_type > op_type)
           master_op = op;
-        } else {
-          if (tokens[master_op].type != TK_PLUS && tokens[master_op].type != TK_MINUS && (tokens[op].type == TK_MUL || tokens[op].type == TK_DIVIDE)) {
-            master_op = op;
-          }
-        }
       }
-      if (tokens[op].type == TK_LP) in_parentheses = true;
+      if (op_type == TK_LP) in_parentheses = true;
       op += 1;
     }
     word_t val_left = expr_substr(start, master_op - 1);
@@ -175,6 +202,12 @@ word_t expr_substr(int start, int end/*, bool *success*/) {
         else
           printf("Zero Division!\n");
         break;
+      case TK_EQ:
+       val = val_left == val_right; break;
+      case TK_NE:
+       val = val_left != val_right; break;
+      case TK_AND:
+       val = val_left && val_right; break;
       default: printf("Wrong operator type!\n");
     }
   }
