@@ -108,7 +108,7 @@ static bool make_token(char *e) {
           int size = substr_len + 1;
           tokens[nr_token].str = (char *) malloc(size);
           strncpy(tokens[nr_token].str, substr_start, substr_len);
-          strcpy(tokens[nr_token].str + substr_len, "\0");
+          tokens[nr_token].str[substr_len] = '\0';
           nr_token++;
         }
         break;
