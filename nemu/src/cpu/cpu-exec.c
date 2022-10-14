@@ -20,6 +20,13 @@ rtlreg_t tmp_reg[4];
 
 void device_update();
 void fetch_decode(Decode *s, vaddr_t pc);
+typedef struct watchpoint {
+  int NO;
+  struct watchpoint *next;
+  char *expression;
+  word_t val;
+} WP;
+WP *anyChange(bool *changed, word_t *new_val);
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -27,6 +34,14 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+  
+  bool changed;
+  word_t new_val;
+  WP *wp = anyChange(&changed, &new_val);
+  if (changed) {
+    nemu_state.state = NEMU_STOP;  
+    printf("wp%-2d: %s changed. %d => %d\n", wp->NO, wp->expression, wp->val, new_val);
+  }
 }
 
 #include <isa-exec.h>

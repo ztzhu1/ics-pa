@@ -8,6 +8,7 @@ typedef struct watchpoint {
 
   /* TODO: Add more members if necessary */
   char *expression;
+  word_t val;
 
 } WP;
 
@@ -50,6 +51,8 @@ WP* new_wp(char *expression) {
   }
   p_free->expression = (char *) malloc(strlen(expression) + 1);
   strcpy(p_free->expression, expression);
+  bool success;
+  p_free->val = expr(expression, &success);
   return p_free;
 }
 
@@ -84,9 +87,10 @@ WP *getWP(int index) {
 
 void wp_display() {
   printf("using:\n");
+  bool success;
   for (int i = 0; i < NR_WP; i++) {
     if (wp_pool[i].expression)
-      printf("wp%-2d: %s\n", i, wp_pool[i].expression);
+      printf("wp%-2d: %s, %d\n", i, wp_pool[i].expression, expr(wp_pool[i].expression, &success));
   }  
 
   printf("free:\n");
@@ -101,4 +105,20 @@ void wp_display() {
   }  
   if (count % 4 != 0)
     printf("\n");
+}
+
+WP *anyChange(bool *changed, word_t *new_val) {
+  for (int i = 0; i < NR_WP; i++) {
+    if (wp_pool[i].expression) {
+      bool success;
+      word_t val = expr(wp_pool[i].expression, &success);
+      if (val != wp_pool[i].val) {
+        *changed = true;
+        *new_val = val;
+        return wp_pool + i;
+      }
+    }
+  }
+  *changed = false;
+  return NULL;
 }
