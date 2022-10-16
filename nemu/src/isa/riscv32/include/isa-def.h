@@ -20,6 +20,15 @@ typedef struct {
       uint32_t rd        : 5;
       uint32_t funct3    : 3;
       uint32_t rs1       : 5;
+      uint32_t rs2       : 5;
+      uint32_t funct7    : 7;
+    } r;
+    struct {
+      uint32_t opcode1_0 : 2;
+      uint32_t opcode6_2 : 5;
+      uint32_t rd        : 5;
+      uint32_t funct3    : 3;
+      uint32_t rs1       : 5;
       int32_t  simm11_0  :12;
     } i;
     struct {
@@ -34,6 +43,17 @@ typedef struct {
     struct {
       uint32_t opcode1_0 : 2;
       uint32_t opcode6_2 : 5;
+      uint32_t imm11_11  : 1;
+      uint32_t imm4_1    : 4;
+      uint32_t funct3    : 3;
+      uint32_t rs1       : 5;
+      uint32_t rs2       : 5;
+      uint32_t imm10_5   : 6;
+      int32_t  simm12_12 : 1;
+    } b;
+    struct {
+      uint32_t opcode1_0 : 2;
+      uint32_t opcode6_2 : 5;
       uint32_t rd        : 5;
       uint32_t imm31_12  :20;
     } u;
@@ -41,10 +61,10 @@ typedef struct {
       uint32_t opcode1_0 : 2;
       uint32_t opcode6_2 : 5;
       uint32_t rd        : 5;
-      uint32_t imm18_11  : 8;
-      uint32_t imm10_10  : 1;
-      uint32_t imm9_0    :10;
-      int32_t simm19_19  : 1;
+      uint32_t imm19_12  : 8;
+      uint32_t imm11_11  : 1;
+      uint32_t imm10_1    :10;
+      int32_t simm20_20  : 1;
     } j;
     uint32_t val;
   } instr;
