@@ -8,12 +8,6 @@ def_EHelper(auipc) {
 }
 
 def_EHelper(addi) {
-  // printf("%08x\n", vaddr_ifetch(0x80000000, 4));
-  // printf("%08x\n", vaddr_ifetch(0x80000004, 4));
-  // printf("%08x\n", vaddr_ifetch(0x80000008, 4));
-  // printf("%08x\n", vaddr_ifetch(0x8000000c, 4));
-  // printf("%08x\n", vaddr_ifetch(0x80000014, 4));
-
   printf("addi: 0x%08x\n", s->pc);
   rtl_addi(s, ddest, dsrc1, id_src2->imm);
 }
