@@ -66,10 +66,13 @@ static inline def_rtl(msb, rtlreg_t* dest, const rtlreg_t* src1, int width) {
 
 static inline def_rtl(slt, rtlreg_t *dest, const rtlreg_t* src1,
 const rtlreg_t* src2)  {
-  // dest <- -src1
-  rtl_sub(s, s0, src1, src2);
-  rtl_msb(s, s0, s0, 4);
-  rtl_mv(s, dest, s0);
+  if ((sword_t)*dsrc1 < (sword_t)*dsrc2)
+    *ddest = 1;
+  else
+    *ddest = 0;
+  // rtl_sub(s, s0, src1, src2);
+  // rtl_msb(s, s0, s0, 4);
+  // rtl_mv(s, dest, s0);
 }
 
 #endif
