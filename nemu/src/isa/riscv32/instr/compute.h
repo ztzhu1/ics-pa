@@ -81,35 +81,28 @@ def_EHelper(srai) {
 }
 
 def_EHelper(beq) {
-  //cheating
-  if (*dsrc1 == *dsrc2){
-    rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm);
-  }
-  // rtl_sub(s, s0, dsrc1, dsrc2);
-  // rtl_sub(s, s1, dsrc2, dsrc1);
-  // rtl_msb(s, s0, s0, 4);
-  // rtl_msb(s, s1, s1, 4);
-  // rtl_or(s, s0, s0, s1);
-  // rtl_xori(s, s0, s0, 1);
-  // rtl_li(s, s1, id_dest->imm);
-  // rtl_subi(s, s1, s1, 4);
-  // rtl_mulu_lo(s, s0, s0, s1);
-  // rtl_add(s, &s->dnpc, &s->dnpc, s0);
+  rtl_sub(s, s0, dsrc1, dsrc2);
+  rtl_sub(s, s1, dsrc2, dsrc1);
+  rtl_msb(s, s0, s0, 4);
+  rtl_msb(s, s1, s1, 4);
+  rtl_or(s, s0, s0, s1);
+  rtl_xori(s, s0, s0, 1);
+  rtl_li(s, s1, id_dest->imm);
+  rtl_subi(s, s1, s1, 4);
+  rtl_mulu_lo(s, s0, s0, s1);
+  rtl_add(s, &s->dnpc, &s->dnpc, s0);
 }
 
 def_EHelper(bne) {
-  // cheating
-  if (*dsrc1 != *dsrc2)
-    rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm); 
-  // rtl_sub(s, s0, dsrc1, dsrc2);
-  // rtl_sub(s, s1, dsrc2, dsrc1);
-  // rtl_msb(s, s0, s0, 4);
-  // rtl_msb(s, s1, s1, 4);
-  // rtl_or(s, s0, s0, s1);
-  // rtl_li(s, s1, id_dest->imm);
-  // rtl_subi(s, s1, s1, 4);
-  // rtl_mulu_lo(s, s0, s0, s1);
-  // rtl_add(s, &s->dnpc, &s->dnpc, s0);
+  rtl_sub(s, s0, dsrc1, dsrc2);
+  rtl_sub(s, s1, dsrc2, dsrc1);
+  rtl_msb(s, s0, s0, 4);
+  rtl_msb(s, s1, s1, 4);
+  rtl_or(s, s0, s0, s1);
+  rtl_li(s, s1, id_dest->imm);
+  rtl_subi(s, s1, s1, 4);
+  rtl_mulu_lo(s, s0, s0, s1);
+  rtl_add(s, &s->dnpc, &s->dnpc, s0);
 }
 
 def_EHelper(bge) {
@@ -127,15 +120,12 @@ def_EHelper(bge) {
 }
 
 def_EHelper(blt) {
-  // cheating
-  if (*(sword_t *)dsrc1 < *(sword_t *)dsrc2)
-    rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm);
-  // rtl_sub(s, s0, dsrc1, dsrc2);
-  // rtl_msb(s, s0, s0, 4);
-  // rtl_li(s, s1, id_dest->imm);
-  // rtl_subi(s, s1, s1, 4);
-  // rtl_mulu_lo(s, s0, s0, s1);
-  // rtl_add(s, &s->dnpc, &s->dnpc, s0);
+  rtl_sub(s, s0, dsrc1, dsrc2);
+  rtl_msb(s, s0, s0, 4);
+  rtl_li(s, s1, id_dest->imm);
+  rtl_subi(s, s1, s1, 4);
+  rtl_mulu_lo(s, s0, s0, s1);
+  rtl_add(s, &s->dnpc, &s->dnpc, s0);
 }
 
 def_EHelper(bltu) {
