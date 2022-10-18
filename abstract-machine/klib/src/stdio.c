@@ -29,6 +29,10 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         case 'd':
           out = loadInt(out, va_arg(ap, int));
           break;
+        case '0':
+          out = loadInt(out, va_arg(ap, int));
+          fmt += 2;
+          break;
         case 's':
           out = loadStr(out, va_arg(ap, char *));
           break;
@@ -81,11 +85,13 @@ char *loadInt(char *out, int val) {
     int digit = 1;
     while (msd >= 10) {
       msd /= 10;
-      digit *= 10;
+      digit++;
     }
-    *out = msd + '0';
-    out++;
-    out = loadInt(out, val % (msd * digit));
+    for (int i = digit - 1; i >= 0; i--) {
+      out[i] = val % 10 + '0';
+      val /= 10;
+    }
+    out += digit;
   }
   return out;
 }

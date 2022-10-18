@@ -27,7 +27,10 @@ def_EHelper(or) {
 }
 
 def_EHelper(division) {
-  rtl_divs_q(s, ddest, dsrc1, dsrc2);
+  if (*dsrc2 !=0)
+    rtl_divs_q(s, ddest, dsrc1, dsrc2);
+  else
+    rtl_li(s, ddest, -1);
 }
 
 def_EHelper(mul) {
@@ -38,8 +41,29 @@ def_EHelper(mulh) {
   rtl_muls_hi(s, ddest, dsrc1, dsrc2);
 }
 
+def_EHelper(mulhu) {
+  rtl_mulu_hi(s, ddest, dsrc1, dsrc2);
+}
+
+def_EHelper(divu) {
+  if (*dsrc2 !=0)
+    rtl_divu_q(s, ddest, dsrc1, dsrc2);
+  else
+    rtl_li(s, ddest, -1);
+}
+
 def_EHelper(rem) {
-  rtl_divs_r(s, ddest, dsrc1, dsrc2);
+  if (*dsrc2 !=0)
+    rtl_divs_r(s, ddest, dsrc1, dsrc2);
+  else
+    rtl_mv(s, ddest, dsrc1);
+}
+
+def_EHelper(remu) {
+  if (*dsrc2 !=0)
+    rtl_divu_r(s, ddest, dsrc1, dsrc2);
+  else
+    rtl_mv(s, ddest, dsrc1);
 }
 
 def_EHelper(addi) {
@@ -52,6 +76,10 @@ def_EHelper(andi) {
 
 def_EHelper(xori) {
   rtl_xori(s, ddest, dsrc1, id_src2->imm);
+}
+
+def_EHelper(ori) {
+  rtl_ori(s, ddest, dsrc1, id_src2->imm);
 }
 
 def_EHelper(sll) {
@@ -72,6 +100,11 @@ def_EHelper(slli) {
 
 def_EHelper(srli) {
   rtl_srli(s, ddest, dsrc1, id_src2->imm);
+}
+
+def_EHelper(slti) {
+  rtl_subi(s, ddest, dsrc1, id_src2->imm);
+  rtl_msb(s, ddest, ddest, 4);
 }
 
 def_EHelper(srai) {
@@ -136,6 +169,12 @@ def_EHelper(blt) {
 def_EHelper(bltu) {
   // cheating
   if (*dsrc1 < *dsrc2)
+    rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm); 
+}
+
+def_EHelper(bgeu) {
+  // cheating
+  if (*dsrc1 >= *dsrc2)
     rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm); 
 }
 
