@@ -5,11 +5,11 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-char *loadInt(char *out, int val);
+char *loadInt(char *out, int val, int base);
 char *loadStr(char *out, char *str);
 
 int printf(const char *fmt, ...) {
-  char out[1024];
+  char out[256];
   va_list ap;
 
   va_start(ap, fmt);
@@ -27,24 +27,31 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
       fmt++;
       switch (*fmt) {
         case 'd':
-          out = loadInt(out, va_arg(ap, int));
+          out = loadInt(out, va_arg(ap, int), 10);
+          break;
+        case 'x':
+          out = loadInt(out, va_arg(ap, int), 16);
           break;
         case '0':
-          out = loadInt(out, va_arg(ap, int));
-          fmt += 2;
+          while (*fmt >= '0' && *fmt <= '9')
+            fmt++;
+          if (*fmt == 'd')
+            out = loadInt(out, va_arg(ap, int), 10);
+          else if (*fmt == 'x')
+            out = loadInt(out, va_arg(ap, int), 16);
+          // else
+          //   exit(1);
           break;
         case 's':
           out = loadStr(out, va_arg(ap, char *));
           break;
         case '%':
-          *out = '%';
-          out++;
+          *out++ = '%';
           break;
       }
     }
     else {
-      *out = *fmt;
-      out++;
+      *out++ = *fmt;
     }
     fmt++;
   }
@@ -70,26 +77,25 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   panic("Not implemented");
 }
 
-char *loadInt(char *out, int val) {
+char *loadInt(char *out, int val, int base) {
+  static char representation[16] = "0123456789ABCDEF";
   if (val < 0) {
-    *out = '-';
-    out++;
-    out = loadInt(out, -val);
+    *out++ = '-';
+    out = loadInt(out, -val, base);
   }
-  else if (val < 10) {
-    *out = val + '0';
-    out++;
+  else if (val < base) {
+    *out++ = representation[val];
   }
   else {
     int msd = val;
     int digit = 1;
-    while (msd >= 10) {
-      msd /= 10;
+    while (msd >= base) {
+      msd /= base;
       digit++;
     }
     for (int i = digit - 1; i >= 0; i--) {
-      out[i] = val % 10 + '0';
-      val /= 10;
+      out[i] = representation[val % base];
+      val /= base;
     }
     out += digit;
   }
@@ -98,9 +104,7 @@ char *loadInt(char *out, int val) {
 
 char *loadStr(char *out, char *str) {
   while (*str != '\0') {
-    *out = *str;
-    out++;
-    str++;
+    *out++ = *str++;
   }
   return out;
 }
