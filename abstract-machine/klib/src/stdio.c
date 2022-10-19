@@ -5,7 +5,10 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+static char representation[16] = "0123456789ABCDEF";
+
 char *loadInt(char *out, int val, int base, int space);
+char *loadUInt(char *out, uint32_t val, int base, int space);
 char *loadStr(char *out, char *str);
 
 int printf(const char *fmt, ...) {
@@ -30,7 +33,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           out = loadInt(out, va_arg(ap, int), 10, 0);
           break;
         case 'x':
-          out = loadInt(out, va_arg(ap, int), 16, 0);
+          out = loadUInt(out, va_arg(ap, uint32_t), 16, 0);
           break;
         case '0':
           fmt++;
@@ -39,7 +42,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           if (*fmt == 'd')
             out = loadInt(out, va_arg(ap, int), 10, space);
           else if (*fmt == 'x')
-            out = loadInt(out, va_arg(ap, int), 16, space);
+            out = loadUInt(out, va_arg(ap, int), 16, space);
           // else
           //   exit(1);
           break;
@@ -79,12 +82,36 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
 }
 
 char *loadInt(char *out, int val, int base, int space) {
-  static char representation[16] = "0123456789ABCDEF";
   if (val < 0) {
     *out++ = '-';
     out = loadInt(out, -val, base, space);
   }
   else if (val < base) {
+    *out++ = representation[val];
+  }
+  else {
+    int msd = val;
+    int digit = 1;
+    while (msd >= base) {
+      msd /= base;
+      digit++;
+    }
+    if (digit < space) {
+      int num_zero = space - digit;
+      for (int i = 0; i < num_zero; i++)
+        *out++ = '0';
+    }
+    for (int i = digit - 1; i >= 0; i--) {
+      out[i] = representation[val % base];
+      val /= base;
+    }
+    out += digit;
+  }
+  return out;
+}
+
+char *loadUInt(char *out, uint32_t val, int base, int space) {
+  if (val < base) {
     *out++ = representation[val];
   }
   else {
