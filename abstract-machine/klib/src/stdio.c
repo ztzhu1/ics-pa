@@ -5,7 +5,7 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-char *loadInt(char *out, int val, int base);
+char *loadInt(char *out, int val, int base, int space);
 char *loadStr(char *out, char *str);
 
 int printf(const char *fmt, ...) {
@@ -27,18 +27,19 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
       fmt++;
       switch (*fmt) {
         case 'd':
-          out = loadInt(out, va_arg(ap, int), 10);
+          out = loadInt(out, va_arg(ap, int), 10, 0);
           break;
         case 'x':
-          out = loadInt(out, va_arg(ap, int), 16);
+          out = loadInt(out, va_arg(ap, int), 16, 0);
           break;
         case '0':
-          while (*fmt >= '0' && *fmt <= '9')
-            fmt++;
+          fmt++;
+          int space = *fmt - '0';
+          fmt++;
           if (*fmt == 'd')
-            out = loadInt(out, va_arg(ap, int), 10);
+            out = loadInt(out, va_arg(ap, int), 10, space);
           else if (*fmt == 'x')
-            out = loadInt(out, va_arg(ap, int), 16);
+            out = loadInt(out, va_arg(ap, int), 16, space);
           // else
           //   exit(1);
           break;
@@ -77,11 +78,11 @@ int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
   panic("Not implemented");
 }
 
-char *loadInt(char *out, int val, int base) {
+char *loadInt(char *out, int val, int base, int space) {
   static char representation[16] = "0123456789ABCDEF";
   if (val < 0) {
     *out++ = '-';
-    out = loadInt(out, -val, base);
+    out = loadInt(out, -val, base, space);
   }
   else if (val < base) {
     *out++ = representation[val];
@@ -92,6 +93,11 @@ char *loadInt(char *out, int val, int base) {
     while (msd >= base) {
       msd /= base;
       digit++;
+    }
+    if (digit < space) {
+      int num_zero = space - digit;
+      for (int i = 0; i < num_zero; i++)
+        *out++ = '0';
     }
     for (int i = digit - 1; i >= 0; i--) {
       out[i] = representation[val % base];
