@@ -32,6 +32,9 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         case 'd':
           out = loadInt(out, va_arg(ap, int), 10, 0);
           break;
+        case 'u':
+          out = loadUInt(out, va_arg(ap, uint32_t), 10, 0);
+          break;
         case 'x':
           out = loadUInt(out, va_arg(ap, uint32_t), 16, 0);
           break;
@@ -115,7 +118,7 @@ char *loadUInt(char *out, uint32_t val, int base, int space) {
     *out++ = representation[val];
   }
   else {
-    int msd = val;
+    uint32_t msd = val;
     int digit = 1;
     while (msd >= base) {
       msd /= base;
