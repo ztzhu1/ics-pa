@@ -58,11 +58,13 @@ static inline void update_screen() {}
 void vga_update_screen() {
   // TODO: call `update_screen()` when the sync register is non-zero,
   // then zero out the sync register
-  bool sync = *sync_addr;
+  bool sync = *vgactl_port_base >> 31;
+  // bool sync = *sync_addr;
   if (sync) {
     update_screen();
   }
   *sync_addr = 0;
+  *(uint32_t *)vgactl_port_base = ((*(uint32_t *)vga_update_screen) << 1) >> 1;
 }
 
 void init_vga() {
