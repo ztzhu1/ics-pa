@@ -5,7 +5,6 @@
 #define SYNC_ADDR (VGACTL_ADDR + 4)
 #define WIDTH 400
 #define HEIGHT 300
-#define N 20
 
 void __am_gpu_init() {
   // int i;
@@ -34,7 +33,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     for (int j = x; j < x + w; j++) {
       int index = j + i * WIDTH;
       uint32_t *fb = (uint32_t *)(uintptr_t)FB_ADDR;
-      fb[index] = ((uint32_t *)ctl->pixels)[(j - x) + (i - y) * N];
+      fb[index] = ((uint32_t *)ctl->pixels)[(j - x) + (i - y) * w];
     }
   }
 }
