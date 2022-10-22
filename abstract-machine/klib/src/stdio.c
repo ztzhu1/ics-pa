@@ -11,8 +11,10 @@ char *loadInt(char *out, int val, int base, int space);
 char *loadUInt(char *out, uint32_t val, int base, int space);
 char *loadStr(char *out, char *str);
 
+#define BUF_SIZE 4096 
+
 int printf(const char *fmt, ...) {
-  char out[256];
+  char out[BUF_SIZE];
   va_list ap;
 
   va_start(ap, fmt);
