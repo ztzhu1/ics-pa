@@ -213,13 +213,10 @@ def_EHelper(jal) {
 }
 
 def_EHelper(jalr) {
-  // rtl_addi(s, ddest, &s->pc, 4);
-  // rtl_addi(s, &s->dnpc, dsrc1, id_src2->imm);
-  // s->dnpc = s->dnpc & ~1;
-  rtl_addi(s, ddest, &s->pc, 4);
   rtl_addi(s, s0, dsrc1, id_src2->imm);
   rtl_andi(s, s0, s0, ~1);
   rtl_mv(s, &s->dnpc, s0);
+  rtl_addi(s, ddest, &s->pc, 4);
 }
 
 extern riscv32_CSR_state csr_state;
