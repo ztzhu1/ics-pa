@@ -5,7 +5,7 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-static char representation[16] = "0123456789ABCDEF";
+static char representation[16] = "0123456789abcdef";
 
 char *loadInt(char *out, int val, int base, int space);
 char *loadUInt(char *out, uint32_t val, int base, int space);
