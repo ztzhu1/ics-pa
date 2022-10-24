@@ -225,7 +225,6 @@ extern rtlreg_t *map_csr_addr(riscv32_CSR_state *csr_state, paddr_t csr_paddr);
 def_EHelper(csrrw) {
   // Actually, I should first zero-extend id_src2->imm.
   // But it won't be more than 2^11, always positive.
-  printf("csrrw: %08x, %08x, %08x\n", id_src2->imm, *dsrc1, cpu.pc);
   rtlreg_t *csr_addr = map_csr_addr(&csr_state, id_src2->imm);
   *ddest = *csr_addr;
   *csr_addr = *dsrc1;
@@ -234,19 +233,16 @@ def_EHelper(csrrw) {
 def_EHelper(csrrs) {
   // Actually, I should first zero-extend id_src2->imm.
   // But it won't be more than 2^11, always positive.
-  printf("csrrs: %08x, %08x, %08x\n", id_src2->imm, *dsrc1, cpu.pc);
   rtlreg_t *csr_addr = map_csr_addr(&csr_state, id_src2->imm);
   *ddest = *csr_addr;
   *csr_addr = *csr_addr | *dsrc1;
 }
 
 def_EHelper(ecall) {
-  printf("ecall: %08x\n", cpu.pc);
   s->dnpc = isa_raise_intr(0xb, cpu.pc);
 }
 
 def_EHelper(mret) {
-  printf("mret: %08x, %08x\n", cpu.pc, csr_state.mepc);
   // mepc += 4 in _am_irq_handle
   s->dnpc = csr_state.mepc;
 }
