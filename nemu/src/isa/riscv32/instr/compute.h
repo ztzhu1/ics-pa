@@ -114,28 +114,35 @@ def_EHelper(srai) {
 }
 
 def_EHelper(beq) {
-  rtl_sub(s, s0, dsrc1, dsrc2);
-  rtl_sub(s, s1, dsrc2, dsrc1);
-  rtl_msb(s, s0, s0, 4);
-  rtl_msb(s, s1, s1, 4);
-  rtl_or(s, s0, s0, s1);
-  rtl_xori(s, s0, s0, 1);
-  rtl_li(s, s1, id_dest->imm);
-  rtl_subi(s, s1, s1, 4);
-  rtl_mulu_lo(s, s0, s0, s1);
-  rtl_add(s, &s->dnpc, &s->dnpc, s0);
+  // cheating
+  if (*dsrc1 == *dsrc2){
+    rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm);
+  }
+  // rtl_sub(s, s0, dsrc1, dsrc2);
+  // rtl_sub(s, s1, dsrc2, dsrc1);
+  // rtl_msb(s, s0, s0, 4);
+  // rtl_msb(s, s1, s1, 4);
+  // rtl_or(s, s0, s0, s1);
+  // rtl_xori(s, s0, s0, 1);
+  // rtl_li(s, s1, id_dest->imm);
+  // rtl_subi(s, s1, s1, 4);
+  // rtl_mulu_lo(s, s0, s0, s1);
+  // rtl_add(s, &s->dnpc, &s->dnpc, s0);
 }
 
 def_EHelper(bne) {
-  rtl_sub(s, s0, dsrc1, dsrc2);
-  rtl_sub(s, s1, dsrc2, dsrc1);
-  rtl_msb(s, s0, s0, 4);
-  rtl_msb(s, s1, s1, 4);
-  rtl_or(s, s0, s0, s1);
-  rtl_li(s, s1, id_dest->imm);
-  rtl_subi(s, s1, s1, 4);
-  rtl_mulu_lo(s, s0, s0, s1);
-  rtl_add(s, &s->dnpc, &s->dnpc, s0);
+  if (*dsrc1 != *dsrc2){
+    rtl_addi(s, &s->dnpc, &s->pc, id_dest->imm);
+  }
+  // rtl_sub(s, s0, dsrc1, dsrc2);
+  // rtl_sub(s, s1, dsrc2, dsrc1);
+  // rtl_msb(s, s0, s0, 4);
+  // rtl_msb(s, s1, s1, 4);
+  // rtl_or(s, s0, s0, s1);
+  // rtl_li(s, s1, id_dest->imm);
+  // rtl_subi(s, s1, s1, 4);
+  // rtl_mulu_lo(s, s0, s0, s1);
+  // rtl_add(s, &s->dnpc, &s->dnpc, s0);
 }
 
 def_EHelper(bge) {
@@ -206,8 +213,13 @@ def_EHelper(jal) {
 }
 
 def_EHelper(jalr) {
+  // rtl_addi(s, ddest, &s->pc, 4);
+  // rtl_addi(s, &s->dnpc, dsrc1, id_src2->imm);
+  // s->dnpc = s->dnpc & ~1;
   rtl_addi(s, ddest, &s->pc, 4);
-  rtl_addi(s, &s->dnpc, dsrc1, id_src2->imm);
+  rtl_addi(s, s0, dsrc1, id_src2->imm);
+  rtl_andi(s, s0, s0, ~1);
+  rtl_mv(s, &s->dnpc, s0);
 }
 
 extern riscv32_CSR_state csr_state;
@@ -233,13 +245,11 @@ def_EHelper(csrrs) {
 
 def_EHelper(ecall) {
   printf("ecall: %08x\n", cpu.pc);
-  csr_state.mepc = cpu.pc;
-  s->dnpc = csr_state.mtvec;
+  s->dnpc = isa_raise_intr(0xb, cpu.pc);
 }
 
 def_EHelper(mret) {
   printf("mret: %08x, %08x\n", cpu.pc, csr_state.mepc);
-  s->dnpc = csr_state.mepc + 4;
-  printf("mstatus code: %08x\n", csr_state.mstatus);
-  
+  // mepc += 4 in _am_irq_handle
+  s->dnpc = csr_state.mepc;
 }

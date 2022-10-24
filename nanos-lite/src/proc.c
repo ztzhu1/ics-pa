@@ -18,6 +18,7 @@ void hello_fun(void *arg) {
     yield();
   }
 }
+void naive_uload(PCB *pcb, const char *filename);
 
 void init_proc() {
   switch_boot_pcb();
@@ -25,6 +26,7 @@ void init_proc() {
   Log("Initializing processes...");
 
   // load program here
+  naive_uload(NULL, NULL);
 
 }
 

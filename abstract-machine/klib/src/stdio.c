@@ -37,7 +37,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         case 'u':
           out = loadUInt(out, va_arg(ap, uint32_t), 10, 0);
           break;
-        case 'x':
+        case 'x': case 'p':
           out = loadUInt(out, va_arg(ap, uint32_t), 16, 0);
           break;
         case '0':

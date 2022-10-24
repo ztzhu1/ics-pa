@@ -13,27 +13,27 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
-  int col = 8;
-  int row = 4;
-  bool *success = (bool *) malloc(1);
-   for (int i = 0; i < row; i++) {
-    for (int j = 0; j < col; j++) {
-      int idx = i * col + j;
-      const char *reg = regs[idx];
-      word_t val = isa_reg_str2val(reg, success);
-      if (!*success) {
-        printf(RED "Wrong register index!" RESET);
-        exit(-1);
-      }
-      uint8_t *val_ptr = (uint8_t *)&val;
-      printf("%-3s: ", reg);
-      for (int m = 0; m < 4; m++)
-        printf("%02x ", *(val_ptr + m));
-      printf("\n");
-    }
-  }
-  free(success);
-  success = NULL;
+  // int col = 8;
+  // int row = 4;
+  // bool *success = (bool *) malloc(1);
+  //  for (int i = 0; i < row; i++) {
+  //   for (int j = 0; j < col; j++) {
+  //     int idx = i * col + j;
+  //     const char *reg = regs[idx];
+      // word_t val = isa_reg_str2val(reg, success);
+      // if (!*success) {
+      //   printf(RED "Wrong register index!" RESET);
+      //   exit(-1);
+      // }
+      // uint8_t *val_ptr = (uint8_t *)&val;
+      // printf("%-3s: ", reg);
+      // for (int m = 0; m < 4; m++)
+        // printf("%02x ", *(val_ptr + m));
+      // printf("\n");
+  //   }
+  // }
+  // free(success);
+  // success = NULL;
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
