@@ -24,4 +24,10 @@ enum {
   SYS_gettimeofday
 };
 
+extern int fs_open(const char *pathname, int flags, int mode);
+extern int fs_read(int fd, void *buf, size_t count);
+extern int fs_write(int fd, const void *buf, size_t count);
+extern size_t fs_lseek(int fd, int offset, int whence);
+extern int fs_close(int fd);
+
 #endif
