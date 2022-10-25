@@ -15,11 +15,12 @@ size_t ramdisk_write(const void *buf, size_t offset, size_t len);
 extern uint8_t ramdisk_start;
 extern uint8_t ramdisk_end;
 
+
 static void load_segment(size_t offset, uintptr_t virtAddr, size_t fileSize, size_t memSize) {
   uint8_t buf[24000];
   ramdisk_read(buf, offset, fileSize);
   memcpy((void *)virtAddr, buf, fileSize);
-  if (fileSize < memSize) {
+  if (fileSize < memSize) { // .bss
     memset((void *)(virtAddr + fileSize), 0, memSize - fileSize);
   }
     return;
