@@ -15,7 +15,9 @@ typedef struct {
   size_t file_offset;
 } Finfo;
 
-enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_FB};
+enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_EVENT, FD_FB};
+
+extern size_t events_read(void *buf, size_t offset, size_t len);
 
 size_t invalid_read(void *buf, size_t offset, size_t len) {
   panic("should not reach here");
@@ -48,8 +50,9 @@ static size_t file_write(const void *buf, size_t offset, size_t len) {
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
-  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, invalid_write},
-  [FD_STDERR] = {"stderr", 0, 0, invalid_read, invalid_write},
+  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, std_write},
+  [FD_STDERR] = {"stderr", 0, 0, invalid_read, std_write},
+  [FD_EVENT] = {"/dev/events", 0, 0, events_read, invalid_write},
 #include "files.h"
 };
 
@@ -65,9 +68,7 @@ size_t fs_lseek(int fd, int offset, int whence);
 
 void init_fs() {
   // TODO: initialize the size of /dev/fb
-  file_table[FD_STDOUT].write = std_write;
-  file_table[FD_STDERR].write = std_write;
-  for (size_t i = 3; i < num_files(); i++) {
+  for (size_t i = FD_FB; i < num_files(); i++) {
     file_table[i].write = file_write;
     file_table[i].read = file_read;
   }
@@ -90,7 +91,7 @@ int fs_open(const char *pathname, int flags, int mode) {
 int fs_read(int fd, void *buf, size_t count) {
   assert((fd == 0 || fd > 2) && fd < num_files());
   size_t offset = file_table[fd].disk_offset + file_table[fd].file_offset;
-  if (fd > 2) {
+  if (fd >= FD_FB) {
     int capacity = file_table[fd].size - file_table[fd].file_offset;
     if (count > capacity)
       count = capacity;
@@ -104,7 +105,7 @@ int fs_read(int fd, void *buf, size_t count) {
 int fs_write(int fd, const void *buf, size_t count) {
   assert(fd != 0 && fd < num_files());
   size_t offset = file_table[fd].disk_offset + file_table[fd].file_offset;
-  if (fd > 2) {
+  if (fd >= FD_FB) {
     int capacity = file_table[fd].size - file_table[fd].file_offset;
     if (count > capacity)
       count = capacity;

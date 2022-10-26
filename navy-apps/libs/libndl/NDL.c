@@ -8,12 +8,23 @@ static int evtdev = -1;
 static int fbdev = -1;
 static int screen_w = 0, screen_h = 0;
 
+extern int _gettimeofday(struct timeval *tv, struct timezone *tz);
+extern int _open(const char *path, int flags, mode_t mode);
+extern int _read(int fd, void *buf, size_t count);
+extern int _close(int fd);
+
 uint32_t NDL_GetTicks() {
-  return 0;
+  struct timeval tv;
+  _gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
 int NDL_PollEvent(char *buf, int len) {
-  return 0;
+  int fd = _open("/dev/events", 0, 0);
+  int ret = _read(fd, buf, len);
+  _close(fd);
+  if (ret != 0) { ret = 1; }
+  return ret;
 }
 
 void NDL_OpenCanvas(int *w, int *h) {

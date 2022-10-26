@@ -24,6 +24,19 @@ enum {
   SYS_gettimeofday
 };
 
+typedef long time_t;
+typedef long suseconds_t;
+
+// struct timeval{
+//   time_t tv_sec;
+//   suseconds_t tv_usec;
+// };
+
+// struct timezone{
+//   int tz_minuteswest;
+//   int tz_dsttime;
+// };
+
 extern int fs_open(const char *pathname, int flags, int mode);
 extern int fs_read(int fd, void *buf, size_t count);
 extern int fs_write(int fd, const void *buf, size_t count);
