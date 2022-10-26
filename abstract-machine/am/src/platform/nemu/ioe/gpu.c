@@ -23,6 +23,13 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
   };
 }
 
+void __am_gpu_memcpy(AM_GPU_MEMCPY_T *cmp) {
+  uint8_t *addr = (uint8_t *)(FB_ADDR + cmp->dest);
+  for (int i = 0; i < cmp->size; i++) {
+    *(addr + i) = *(uint8_t *)(cmp->src + i);
+  }
+}
+
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   if (ctl->sync) {
     // outl(SYNC_ADDR, 1);

@@ -15,9 +15,12 @@ typedef struct {
   size_t file_offset;
 } Finfo;
 
-enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_EVENT, FD_FB};
+enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_EVENT, FD_DISP, FD_FB, FD_TEXT};
 
+extern size_t serial_write(const void *buf, size_t offset, size_t len);
 extern size_t events_read(void *buf, size_t offset, size_t len);
+extern size_t dispinfo_read(void *buf, size_t offset, size_t len);
+extern size_t fb_write(const void *buf, size_t offset, size_t len);
 
 size_t invalid_read(void *buf, size_t offset, size_t len) {
   panic("should not reach here");
@@ -34,14 +37,6 @@ static size_t file_read(void *buf, size_t offset, size_t len) {
   return count;
 }
 
-static size_t std_write(const void *buf, size_t offset, size_t len) {
-  size_t count = 0;
-  for (; count < len; count++) {
-    putch(*(char *)(buf + count));
-  }
-  return count;
-}
-
 static size_t file_write(const void *buf, size_t offset, size_t len) {
   size_t count = ramdisk_write(buf, offset, len);
   return count;
@@ -50,9 +45,11 @@ static size_t file_write(const void *buf, size_t offset, size_t len) {
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
-  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, std_write},
-  [FD_STDERR] = {"stderr", 0, 0, invalid_read, std_write},
+  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
+  [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
   [FD_EVENT] = {"/dev/events", 0, 0, events_read, invalid_write},
+  [FD_DISP] = {"/proc/dispinfo", 0, 0, dispinfo_read, invalid_write},
+  [FD_FB] = {"/dev/fb", 0, 0, invalid_read, fb_write},
 #include "files.h"
 };
 
@@ -68,7 +65,10 @@ size_t fs_lseek(int fd, int offset, int whence);
 
 void init_fs() {
   // TODO: initialize the size of /dev/fb
-  for (size_t i = FD_FB; i < num_files(); i++) {
+  AM_GPU_CONFIG_T config = io_read(AM_GPU_CONFIG);
+  file_table[FD_FB].size = config.width * config.height * sizeof(uint32_t);
+
+  for (size_t i = FD_TEXT; i < num_files(); i++) {
     file_table[i].write = file_write;
     file_table[i].read = file_read;
   }
