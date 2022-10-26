@@ -27,6 +27,24 @@ size_t invalid_write(const void *buf, size_t offset, size_t len) {
   return 0;
 }
 
+static size_t file_read(void *buf, size_t offset, size_t len) {
+  size_t count = ramdisk_read(buf, offset, len);
+  return count;
+}
+
+static size_t std_write(const void *buf, size_t offset, size_t len) {
+  size_t count = 0;
+  for (; count < len; count++) {
+    putch(*(char *)(buf + count));
+  }
+  return count;
+}
+
+static size_t file_write(const void *buf, size_t offset, size_t len) {
+  size_t count = ramdisk_write(buf, offset, len);
+  return count;
+}
+
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
@@ -47,6 +65,12 @@ size_t fs_lseek(int fd, int offset, int whence);
 
 void init_fs() {
   // TODO: initialize the size of /dev/fb
+  file_table[FD_STDOUT].write = std_write;
+  file_table[FD_STDERR].write = std_write;
+  for (size_t i = 3; i < num_files(); i++) {
+    file_table[i].write = file_write;
+    file_table[i].read = file_read;
+  }
 }
 
 int fs_open(const char *pathname, int flags, int mode) {
@@ -65,39 +89,30 @@ int fs_open(const char *pathname, int flags, int mode) {
 
 int fs_read(int fd, void *buf, size_t count) {
   assert((fd == 0 || fd > 2) && fd < num_files());
-  int i = 0;
-  if (fd == 0) {
-    // doesn't support stdin
-    assert(0);
-  } else {
+  size_t offset = file_table[fd].disk_offset + file_table[fd].file_offset;
+  if (fd > 2) {
     int capacity = file_table[fd].size - file_table[fd].file_offset;
     if (count > capacity)
       count = capacity;
-    i = ramdisk_read(buf, file_table[fd].disk_offset + file_table[fd].file_offset, count);
-    if (i != -1)
-      file_table[fd].file_offset += count;
   }
-  // i == count or -1
-  return i;
+  count = file_table[fd].read(buf, offset, count);
+  if (count != -1)
+      file_table[fd].file_offset += count;
+  return count;
 }
 
 int fs_write(int fd, const void *buf, size_t count) {
   assert(fd != 0 && fd < num_files());
-  int i = 0;
-  if (fd == 1 || fd == 2) {
-    for (; i < count; i++) {
-      putch(*(char *)(buf + i));
-    }
-  } else {
+  size_t offset = file_table[fd].disk_offset + file_table[fd].file_offset;
+  if (fd > 2) {
     int capacity = file_table[fd].size - file_table[fd].file_offset;
     if (count > capacity)
       count = capacity;
-    i = ramdisk_write(buf, file_table[fd].disk_offset + file_table[fd].file_offset, count);
-    if (i != -1)
-      file_table[fd].file_offset += count;
   }
-  // i == count or -1
-  return i;
+  count = file_table[fd].write(buf, offset, count);
+  if (count != -1)
+      file_table[fd].file_offset += count;
+  return count;
 }
 
 size_t fs_lseek(int fd, int offset, int whence) {

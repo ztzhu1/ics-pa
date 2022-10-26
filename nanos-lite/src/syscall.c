@@ -1,4 +1,5 @@
 #include <common.h>
+#include <sys/time.h>
 #include "syscall.h"
 
 void yield();
@@ -10,6 +11,7 @@ void sys_write(Context *c);
 void sys_lseek(Context *c);
 void sys_close(Context *c);
 void sys_brk(Context *c);
+void sys_gettimeofday(Context *c);
 
 void do_syscall(Context *c) {
   uintptr_t a[4];
@@ -24,6 +26,7 @@ void do_syscall(Context *c) {
     case SYS_lseek: sys_lseek(c); break;
     case SYS_close: sys_close(c); break;
     case SYS_brk: sys_brk(c); break;
+    case SYS_gettimeofday: sys_gettimeofday(c); break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }
 }
@@ -66,7 +69,7 @@ void sys_write(Context *c) {
 
 void sys_lseek(Context *c) {
   int fd = c->GPR2;
-  int offset = c->GPR3;
+  size_t offset = c->GPR3;
   int whence = c->GPR4;
   c->GPRx = fs_lseek(fd, offset, whence);
 }
@@ -74,4 +77,13 @@ void sys_lseek(Context *c) {
 void sys_close(Context *c) {
   int fd = c->GPR2;
   c->GPRx = fs_close(fd);
+}
+
+void sys_gettimeofday(Context *c) {
+  struct timeval *tv = (struct timeval *)c->GPR2;
+  uint64_t time = io_read(AM_TIMER_UPTIME).us;
+  tv->tv_sec = time / 1000000;
+  tv->tv_usec = time % 1000000;
+  // struct timezone *tz = (struct timezone *)c->GPR3;
+  c->GPRx = 0;
 }
