@@ -15,6 +15,7 @@
 enum SDL_Keys {
   SDLK_NONE = 0,
   _KEYS(enumdef)
+  SDLK_KEY_NUM
 };
 
 enum SDL_EventType {

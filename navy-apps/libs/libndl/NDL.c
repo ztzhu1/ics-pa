@@ -9,7 +9,7 @@ static int evtdev = -1;
 static int fbdev = -1;
 static int screen_w = 0, screen_h = 0;
 static int canvas_w = 0, canvas_h = 0;
-static int canvas_x = 136, canvas_y = 86;
+static int canvas_x = 0, canvas_y = 0;
 
 extern int _gettimeofday(struct timeval *tv, struct timezone *tz);
 extern int _open(const char *path, int flags, mode_t mode);
@@ -38,9 +38,15 @@ void NDL_OpenCanvas(int *w, int *h) {
   if (*h == 0)
     *h = screen_h;
   assert(*w <= screen_w && *h <= screen_h);
+  // canvas size
   canvas_w = *w;
   canvas_h = *h;
-  printf("\033[35mcanvas width: %d, canvas height: %d\033[0m\n", canvas_w, canvas_h);
+  printf("\033[36mcanvas width: %d, canvas height: %d\033[0m\n", canvas_w, canvas_h);
+
+  // canvas position 
+  // canvas_x = 136;
+  // canvas_y = 86;
+  printf("\033[36mcanvas x: %d, canvas y: %d\033[0m\n", canvas_x, canvas_y);
 
   if (getenv("NWM_APP")) {
     int fbctl = 4;
