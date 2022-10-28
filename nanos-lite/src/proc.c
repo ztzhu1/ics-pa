@@ -6,6 +6,9 @@ static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
 
+void naive_uload(PCB *pcb, const char *filename);
+Context *kcontext(Area kstack, void (*entry)(void *), void *arg);
+
 void switch_boot_pcb() {
   current = &pcb_boot;
 }
@@ -18,18 +21,26 @@ void hello_fun(void *arg) {
     yield();
   }
 }
-void naive_uload(PCB *pcb, const char *filename);
+
+Context *context_kload(PCB *pcb, void (*entry)(void *), void *arg) {
+  Area kstack = {pcb->stack, pcb->stack + sizeof(Context)};
+  pcb->cp = kcontext(kstack, entry, arg);
+  return pcb->cp;
+}
 
 void init_proc() {
+  context_kload(&pcb[0], hello_fun, NULL);
   switch_boot_pcb();
 
   Log("Initializing processes...");
 
   // load program here
-  naive_uload(NULL, "/bin/hello");
+  // naive_uload(NULL, "/bin/hello");
 
 }
 
 Context* schedule(Context *prev) {
-  return NULL;
+  current->cp = prev;
+  current = &pcb[0];
+  return current->cp;
 }
