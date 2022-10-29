@@ -14,7 +14,7 @@ extern riscv32_CSR_state csr_state;
 #define PTE_D 0x80 // PTE[7:7] Dirty
 
 paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
-  paddr_t page_table_entry_addr = csr_state.satp.ppn21_0 * 4096 + VPN1(vaddr) * 4;
+  paddr_t page_table_entry_addr = csr_state.satp.ppn * 4096 + VPN1(vaddr) * 4;
   uint32_t page_table_entry = paddr_read(page_table_entry_addr, 4);
   assert(page_table_entry & PTE_V);
 
