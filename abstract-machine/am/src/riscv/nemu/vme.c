@@ -70,5 +70,9 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
-  return NULL;
+  Context *c = kstack.end - sizeof(Context);
+  // TODO: Now is machine mode. Should have been user mode.
+  c->mstatus = 0x1800;
+  c->mepc = (uintptr_t)entry;
+  return c;
 }

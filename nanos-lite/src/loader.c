@@ -64,3 +64,54 @@ void context_kload(PCB *pcb, void(*entry)(void *), void *arg) {
   Context *c = kcontext(kstack, entry, arg);
   pcb->cp = c;
 }
+
+Context *ucontext(AddrSpace *as, Area kstack, void *entry);
+
+void context_uload(PCB *pcb, char *filename, char *const argv[], char *const envp[]) {
+  Area kstack;
+  kstack.start = heap.start;
+  kstack.end = heap.end;
+  // parse args
+  uint32_t argc = 1, envc = 0;
+  // while (!argv && argv[argc]) argc++;
+  // while (!envp && envp[envc]) envc++;
+
+  char *str_start = kstack.end - sizeof(Context);
+  for (int i = envc - 1; i >= 0; i--) {
+    str_start -= (strlen(envp[i]) + 1);
+    strcpy((void *)str_start, envp[i]);
+  }
+  for (int i = argc - 1; i >= 0; i--) {
+    str_start -= (strlen(argv[i]) + 1);
+    strcpy((void *)str_start, argv[i]);
+  }
+  memset((void *)(str_start - 4), 0, 4);
+
+  uintptr_t *envp_start = (uintptr_t *)(str_start - 4 * (envc + 1));
+  memset((void *)(envp_start - 4), 0, 4);
+  uintptr_t *argv_start = envp_start - (argc + 1);
+
+  for (int i = 0; i < argc; i++) {
+    argv_start[i] = (uintptr_t)str_start;
+    while (*str_start != '\0')
+      str_start += 1;
+    str_start += 1;
+  }
+  for (int i = 0; i < envc; i++) {
+    envp_start[i] = (uintptr_t)str_start;
+    while (*str_start != '\0')
+      str_start += 1;
+    str_start += 1;
+  }
+
+  // argc
+  uint32_t *argc_addr = argv_start - 1;
+  *argc_addr = argc;
+
+  // pc entry
+  void *entry = (void *)loader(pcb, filename);
+  // load user program
+  Context *c = ucontext(NULL, kstack, entry);
+  c->GPRx = (uintptr_t)argc_addr;
+  pcb->cp = c;
+}
