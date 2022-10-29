@@ -53,9 +53,9 @@ intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
 int _execve(const char *fname, char * const argv[], char *const envp[]);
 
 void _exit(int status) {
-  volatile const char fname[] = "/bin/menu";
-  _execve(fname, NULL, NULL);
-  // _syscall_(SYS_exit, status, 0, 0);
+  // volatile const char fname[] = "/bin/menu";
+  // _execve(fname, NULL, NULL);
+  _syscall_(SYS_exit, status, 0, 0);
   while (1);
 }
 

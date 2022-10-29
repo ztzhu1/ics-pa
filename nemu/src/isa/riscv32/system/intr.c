@@ -21,7 +21,7 @@ rtlreg_t *map_csr_addr(riscv32_CSR_state *csr_state, paddr_t csr_paddr) {
   switch (csr_paddr)
   {
     case 0x300:
-      csr_vaddr = &csr_state->mstatus;
+      csr_vaddr = &(csr_state->mstatus.value);
       break;
     case 0x305:
       csr_vaddr = &csr_state->mtvec;
