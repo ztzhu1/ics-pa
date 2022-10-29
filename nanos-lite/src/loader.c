@@ -72,11 +72,13 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
   kstack.start = heap.start;
   kstack.end = heap.end;
   // parse args
-  uint32_t argc = 1, envc = 0;
-  // while (!argv && argv[argc]) argc++;
-  // while (!envp && envp[envc]) envc++;
+  uint32_t argc = 0, envc = 0;
+  while (argv && argv[argc]) argc++;
+  while (envp && envp[envc]) envc++;
 
-  char *str_start = kstack.end - sizeof(Context);
+  printf("\033[1;34margc=%d, envc=%d\033[0m\n", argc, envc);
+  char *str_start = (char *)kstack.end - sizeof(Context);
+
   for (int i = envc - 1; i >= 0; i--) {
     str_start -= (strlen(envp[i]) + 1);
     strcpy((void *)str_start, envp[i]);
@@ -88,7 +90,7 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
   memset((void *)(str_start - 4), 0, 4);
 
   uintptr_t *envp_start = (uintptr_t *)(str_start - 4 * (envc + 1));
-  memset((void *)(envp_start - 4), 0, 4);
+  memset((void *)(envp_start - 1), 0, 4);
   uintptr_t *argv_start = envp_start - (argc + 1);
 
   for (int i = 0; i < argc; i++) {

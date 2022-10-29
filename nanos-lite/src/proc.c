@@ -25,9 +25,9 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
 
 void init_proc() {
   context_kload(&pcb[0], hello_fun, NULL);
-  char *const argv[] = {"argv1"};
-  // char *const envp[] = {"envp=foo"};
-  context_uload(&pcb[1], "/bin/dummy", argv, NULL);
+  char *const argv[] = {"I am argv0", "I am argv1", NULL};
+  char *const envp[] = {"envp=foo", "a=b", NULL};
+  context_uload(&pcb[1], "/bin/dummy", argv, envp);
   switch_boot_pcb();
 
   Log("Initializing processes...");
