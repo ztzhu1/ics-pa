@@ -238,8 +238,25 @@ def_EHelper(csrrs) {
   *csr_addr = *csr_addr | *dsrc1;
 }
 
+#define USER       0
+#define SUPERVISOR 1
+#define RESERVED   2
+#define MACHINE    3
+
+#define USER_SOFTWARE_INTERRUPT     0
+#define MACHINE_SOFTWARE_INTERRUPT  3
+#define USER_TIMER_INTERRUPT        4
+#define MACHINE_TIMER_INTERRUPT     7
+#define USER_EXTERNAL_INTERRUPT     8
+#define MACHINE_EXTERNAL_INTERRUPT 11
+
 def_EHelper(ecall) {
-  s->dnpc = isa_raise_intr(0xb, cpu.pc);
+  if (csr_state.mstatus.mpp == USER)
+    s->dnpc = isa_raise_intr(USER_EXTERNAL_INTERRUPT, s->pc);
+  else if (csr_state.mstatus.mpp == MACHINE)
+    s->dnpc = isa_raise_intr(MACHINE_EXTERNAL_INTERRUPT, s->pc);
+  else
+    assert(0);
 }
 
 def_EHelper(mret) {

@@ -15,12 +15,37 @@ typedef struct {
     rtlreg_t mepc; // 0x341
     rtlreg_t mtvec; // 0x305
     rtlreg_t mcause; // 0x342
-    rtlreg_t mstatus; // 0x300
     union {
       struct {
-        uint32_t ppn21_0  : 22;
-        uint32_t asid30_22:  9;
-        uint32_t mode31_31:  1;
+        uint32_t uie   : 1;
+        uint32_t sie   : 1;
+        uint32_t wpri0 : 1;
+        uint32_t mie   : 1;
+        uint32_t upie  : 1;
+        uint32_t spie  : 1;
+        uint32_t wpri1 : 1;
+        uint32_t mpie  : 1;
+        uint32_t spp   : 1;
+        uint32_t wpri2 : 2;
+        uint32_t mpp   : 2;
+        uint32_t fs    : 2;
+        uint32_t xs    : 2;
+        uint32_t mprv  : 1;
+        uint32_t sum   : 1;
+        uint32_t mxr   : 1;
+        uint32_t tvm   : 1;
+        uint32_t tw    : 1;
+        uint32_t tsr   : 1;
+        uint32_t wpri3 : 8;
+        uint32_t sd    : 1;
+      };
+      rtlreg_t value;
+    } mstatus; // 0x300
+    union {
+      struct {
+        uint32_t ppn  : 22;
+        uint32_t asid :  9;
+        uint32_t mode :  1;
       };
       rtlreg_t value;
     } satp;
@@ -87,6 +112,6 @@ typedef struct {
 
 extern riscv32_CSR_state csr_state;
 
-#define isa_mmu_check(vaddr, len, type) (csr_state.satp.mode31_31 ? MMU_TRANSLATE : MMU_DIRECT)
+#define isa_mmu_check(vaddr, len, type) (csr_state.satp.mode ? MMU_TRANSLATE : MMU_DIRECT)
 
 #endif
