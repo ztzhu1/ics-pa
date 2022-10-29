@@ -7,14 +7,15 @@ static PCB pcb_boot = {};
 PCB *current = NULL;
 
 void naive_uload(PCB *pcb, const char *filename);
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg);
+Context *context_kload(PCB *pcb, void (*entry)(void *), void *arg);
+Context *context_uload(PCB *pcb, char *path, char *const argv[], char *const envp[]);
 
 void switch_boot_pcb() {
   current = &pcb_boot;
 }
 
 void hello_fun(void *arg) {
-  int j = 1;
+  volatile int j = 1;
   while (1) {
     Log("Hello World from Nanos-lite with arg '%p' for the %dth time!", (uintptr_t)arg, j);
     j ++;
@@ -22,14 +23,10 @@ void hello_fun(void *arg) {
   }
 }
 
-Context *context_kload(PCB *pcb, void (*entry)(void *), void *arg) {
-  Area kstack = {pcb->stack, pcb->stack + sizeof(Context)};
-  pcb->cp = kcontext(kstack, entry, arg);
-  return pcb->cp;
-}
-
 void init_proc() {
-  context_kload(&pcb[0], hello_fun, NULL);
+  char *argv[] = {"argv1", "argv2"};
+  context_kload(&pcb[0], hello_fun, (void *)0);
+  context_uload(&pcb[1], "/bin/timer-test", argv, NULL);
   switch_boot_pcb();
 
   Log("Initializing processes...");
@@ -41,6 +38,6 @@ void init_proc() {
 
 Context* schedule(Context *prev) {
   current->cp = prev;
-  current = &pcb[0];
+  current = current == &pcb[0] ? &pcb[1] : &pcb[0];
   return current->cp;
 }

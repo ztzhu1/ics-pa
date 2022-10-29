@@ -16,6 +16,14 @@ typedef struct {
     rtlreg_t mtvec; // 0x305
     rtlreg_t mcause; // 0x342
     rtlreg_t mstatus; // 0x300
+    union {
+      struct {
+        uint32_t ppn21_0  : 22;
+        uint32_t asid30_22:  9;
+        uint32_t mode31_31:  1;
+      };
+      rtlreg_t value;
+    } satp;
 } riscv32_CSR_state;
 
 // decode
@@ -77,6 +85,8 @@ typedef struct {
   } instr;
 } riscv32_ISADecodeInfo;
 
-#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
+extern riscv32_CSR_state csr_state;
+
+#define isa_mmu_check(vaddr, len, type) (csr_state.satp.mode31_31 ? MMU_TRANSLATE : MMU_DIRECT)
 
 #endif

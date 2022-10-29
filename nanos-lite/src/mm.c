@@ -1,14 +1,21 @@
 #include <memory.h>
+#include <stdint.h>
 
 static void *pf = NULL;
 
 void* new_page(size_t nr_page) {
-  return NULL;
+  void *start = pf;
+  pf += nr_page * 4096;
+  return start;
 }
 
 #ifdef HAS_VME
 static void* pg_alloc(int n) {
-  return NULL;
+  assert(n % (4096) == 0);
+  size_t nr_page = n / 4096;
+  void *start = new_page(nr_page);
+  memset(start, 0, n);
+  return start;
 }
 #endif
 
