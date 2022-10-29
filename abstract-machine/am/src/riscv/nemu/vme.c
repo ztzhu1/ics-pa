@@ -95,8 +95,11 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
   *leaf_page_table_entry = (PTE_PPN_MASK & ((uintptr_t)pa >> 2)) | (PTE_V | PTE_R | PTE_W | PTE_X) | (prot ? PTE_U : 0);
 }
 
-Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
-  Context *c = kstack.end - sizeof(Context);
+Context *ucontext(AddrSpace *as, Area ustack, void *entry) {
+  Context *c = ustack.end - sizeof(Context);
+  // MXR=1，SUM=1, MPP=0(USER), MPIE=1, MIE=0
+  c->mstatus = 0xC0000 | 0x80;
+  // c->GPRx = (uintptr_t)c;
   c->mepc = (uintptr_t)entry;
   c->pdir = as->ptr;
   return c;
