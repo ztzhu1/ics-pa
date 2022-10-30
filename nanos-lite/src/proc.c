@@ -24,10 +24,13 @@ void context_kload(PCB *pcb, void(*entry)(void *), void *arg);
 void context_uload(PCB *pcb, char *filename, char *const argv[], char *const envp[]);
 
 void init_proc() {
-  context_kload(&pcb[0], hello_fun, NULL);
-  char *const argv[] = {"I am argv0", "I am argv1", NULL};
-  char *const envp[] = {"envp=foo", "a=b", NULL};
-  context_uload(&pcb[1], "/bin/dummy", argv, envp);
+  // context_kload(&pcb[0], hello_fun, NULL);
+  char *const argv0[] = {"a from argv0", NULL};
+  char *const envp0[] = {"envp0=foo", NULL};
+  char *const argv1[] = {"a from argv1", NULL};
+  char *const envp1[] = {"envp1=foo", NULL};
+  context_uload(&pcb[0], "/bin/uload-test", argv0, envp0);
+  context_uload(&pcb[1], "/bin/uload-test", argv1, envp1);
   switch_boot_pcb();
 
   Log("Initializing processes...");

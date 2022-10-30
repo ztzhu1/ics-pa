@@ -68,9 +68,10 @@ void context_kload(PCB *pcb, void(*entry)(void *), void *arg) {
 Context *ucontext(AddrSpace *as, Area kstack, void *entry);
 
 void context_uload(PCB *pcb, char *filename, char *const argv[], char *const envp[]) {
+  // alloc space
   Area kstack;
-  kstack.start = heap.start;
-  kstack.end = heap.end;
+  size_t nr_page = 8;
+  kstack.end = (void *)new_page(nr_page);
   // parse args
   uint32_t argc = 0, envc = 0;
   while (argv && argv[argc]) argc++;
