@@ -71,7 +71,7 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
   // alloc space
   Area kstack;
   size_t nr_page = 8;
-  kstack.end = (void *)new_page(nr_page);
+  kstack.end = (void *)(new_page(nr_page) + nr_page * 4096);
   // parse args
   uint32_t argc = 0, envc = 0;
   while (argv && argv[argc]) argc++;

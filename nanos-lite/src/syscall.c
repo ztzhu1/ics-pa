@@ -93,14 +93,14 @@ void sys_gettimeofday(Context *c) {
 
 void naive_uload(PCB *pcb, const char *filename);
 void context_uload(PCB *pcb, char *filename, char *const argv[], char *const envp[]);
+int execve(const char *filename, char *const argv[], char *const envp[]);
 
 void sys_execve(Context *c) {
   char *fname = (char *)c->GPR2;
   char * const *argv = (char * const*)c->GPR3;
   char * const *envp = (char * const*)c->GPR4;
-  context_uload(NULL, fname, argv, envp);
 
   // naive_uload(NULL, fname);
 
-  c->GPRx = 0;
+  c->GPRx = execve(fname, argv, envp);
 }

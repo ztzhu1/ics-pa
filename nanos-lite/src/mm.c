@@ -3,8 +3,9 @@
 static void *pf = NULL;
 
 void* new_page(size_t nr_page) {
+  void *start = pf;
   pf += nr_page * 4096;
-  return pf;
+  return start;
 }
 
 #ifdef HAS_VME

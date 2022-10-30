@@ -25,12 +25,16 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
 
 void init_proc() {
   // context_kload(&pcb[0], hello_fun, NULL);
-  char *const argv0[] = {"a from argv0", NULL};
-  char *const envp0[] = {"envp0=foo", NULL};
-  char *const argv1[] = {"a from argv1", NULL};
-  char *const envp1[] = {"envp1=foo", NULL};
-  context_uload(&pcb[0], "/bin/uload-test", argv0, envp0);
-  context_uload(&pcb[1], "/bin/uload-test", argv1, envp1);
+
+  char *const argv0[] = {"/bin/exec-test", NULL};
+  // char *const envp0[] = {"envp0=foo", NULL};
+  // char *const argv1[] = {"a from argv1", NULL};
+  // char *const envp1[] = {"envp1=foo", NULL};
+  // context_uload(&pcb[0], "/bin/uload-test", argv0, envp0);
+  // context_uload(&pcb[1], "/bin/uload-test", argv1, envp1);
+
+  context_uload(&pcb[0], "/bin/exec-test", argv0, NULL);
+
   switch_boot_pcb();
 
   Log("Initializing processes...");
@@ -44,4 +48,21 @@ Context* schedule(Context *prev) {
   current->cp = prev;
   current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
   return current->cp;
+}
+
+int fs_open(const char *, int, int);
+int fs_close(int);
+
+int execve(const char *filename, char *const argv[], char *const envp[]) {
+  // check filename exists or not
+  int fd = fs_open(filename, 0, 0);
+
+  context_uload(&pcb[1], (char *)filename, argv, envp);
+
+  switch_boot_pcb();
+
+  yield();
+
+  fs_close(fd);
+  return 0;
 }
