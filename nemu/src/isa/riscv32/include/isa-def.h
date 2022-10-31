@@ -16,6 +16,16 @@ typedef struct {
     rtlreg_t mtvec; // 0x305
     rtlreg_t mcause; // 0x342
     rtlreg_t mstatus; // 0x300
+    union {
+      struct {
+        // physical page number (of the root page table)
+        uint32_t ppn  : 22; 
+        // address space identifier
+        uint32_t asid :  9;
+        uint32_t mode :  1; 
+      };
+      rtlreg_t value;
+    } satp; // 0x180
 } riscv32_CSR_state;
 
 // decode
