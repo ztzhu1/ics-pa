@@ -26,14 +26,14 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
 void init_proc() {
   // context_kload(&pcb[0], hello_fun, NULL);
 
-  char *const argv0[] = {"/bin/exec-test", NULL};
+  // char *const argv0[] = {"/bin/exec-test", NULL};
   // char *const envp0[] = {"envp0=foo", NULL};
   // char *const argv1[] = {"a from argv1", NULL};
   // char *const envp1[] = {"envp1=foo", NULL};
   // context_uload(&pcb[0], "/bin/uload-test", argv0, envp0);
   // context_uload(&pcb[1], "/bin/uload-test", argv1, envp1);
 
-  context_uload(&pcb[0], "/bin/exec-test", argv0, NULL);
+  // context_uload(&pcb[0], "/bin/exec-test", argv0, NULL);
 
   switch_boot_pcb();
 
