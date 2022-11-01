@@ -32,6 +32,9 @@ rtlreg_t *map_csr_addr(riscv32_CSR_state *csr_state, paddr_t csr_paddr) {
     case 0x342:
       csr_vaddr = &csr_state->mcause;
       break;
+    case 0x180:
+      csr_vaddr = &(csr_state->satp.value);
+      break;
     default:
       assert(0);
   }

@@ -70,7 +70,6 @@ void __am_switch(Context *c) {
 #define VA_VPN1(va) (((uintptr_t)va) >> 22)
 #define VA_VPN0(va) ((((uintptr_t)va) << 10) >> 22)
 #define VA_OFFSET(va) ((uintptr_t)va & 0xfff)
-#define PTE_V(pte) ((uintptr_t)pte & 0x01)
 #define PTE_PPN(pte) ((uintptr_t)pte >> 10)
 #define PAGE_SIZE 4096
 #define PTE_SIZE 4
@@ -80,7 +79,7 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
   // in page table 1, find PTE1, which indicates
   // page table 2's PPN
   uint32_t *pte1_ptr = (uint32_t *)((uintptr_t)as->ptr + PTE_SIZE * VA_VPN1(va));
-  if (PTE_V(*pte1_ptr) == 0) { 
+  if ((*pte1_ptr & PTE_V) == 0) { 
     /* can be freely used by any softwares
      * i.e. not alloced */
     // alloc page for table 2
@@ -88,7 +87,7 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
     // calculate ppn
     uint32_t ppn = (uintptr_t)page_start / PAGE_SIZE;
     // reserve status bit and set V = 1
-    *pte1_ptr = (*pte1_ptr & ~PTE_PPN_MASK) | 0x01;
+    *pte1_ptr = (*pte1_ptr & ~PTE_PPN_MASK) | PTE_V;
     // write ppn into pte1
     *pte1_ptr = (ppn << 10) | *pte1_ptr;
   }
@@ -97,9 +96,11 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
   uint32_t *pte2_ptr = (uint32_t *)(PTE_PPN(*pte1_ptr) * PAGE_SIZE + VA_VPN0(va) * PTE_SIZE);
   // finally get the pa using leaf PTE
   // void *pa = (void *)(PTE_PPN(*pte2_ptr) * PAGE_SIZE + VA_OFFSET(va));
-  // or reversely, set pte2 according to pa and offset.
-  uint32_t ppn = ((uintptr_t)pa - VA_OFFSET(va)) / PAGE_SIZE;
-  *pte2_ptr = (ppn << 10) | 0x01;
+  // or reversely, set pte2 according to pa.
+  // offset is useless, here because we only need to record the
+  // head address of the table.
+  uint32_t ppn = (uintptr_t)pa / PAGE_SIZE;
+  *pte2_ptr = (ppn << 10) | PTE_V;
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
