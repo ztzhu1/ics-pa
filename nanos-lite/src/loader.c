@@ -16,13 +16,22 @@ int fs_read(int fd, void *buf, size_t count);
 int fs_write(int fd, const void *buf, size_t count);
 size_t fs_lseek(int fd, int offset, int whence);
 int fs_close(int fd);
+void map(AddrSpace *as, void *va, void *pa, int prot);
 
 static void read(int fd, void *buf, size_t count, int offset) {
  fs_lseek(fd, offset, SEEK_SET);
  fs_read(fd, buf, count);
 }
 
-static void load_segment(int fd, int offset, uintptr_t virtAddr, size_t fileSize, size_t memSize) {
+static void load_segment(PCB *pcb, int fd, int offset, uintptr_t virtAddr, size_t fileSize, size_t memSize) {
+  int pageNum = 0;
+  while (1) {
+    if (pageNum * PGSIZE >= memSize)
+      break;
+    void *page_start = (void *)new_page(1);
+    map(&pcb->as, (void *)(virtAddr + offset + pageNum * PGSIZE), page_start, 1);
+    pageNum++;
+  }
   read(fd, (void *)virtAddr, fileSize, offset);
   if (fileSize < memSize) { // .bss
     memset((void *)(virtAddr + fileSize), 0, memSize - fileSize);
@@ -41,8 +50,8 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
   for (int i = 0; i < elf_header.e_phnum; i++) {
     read(fd, &prog_header, n, i * n + elf_header.e_phoff);
     if (prog_header.p_type == PT_LOAD) {
+      load_segment(pcb, fd, prog_header.p_offset, prog_header.p_vaddr, prog_header.p_filesz, prog_header.p_memsz);
       printf("load segment %d\n", i);
-      load_segment(fd, prog_header.p_offset, prog_header.p_vaddr, prog_header.p_filesz, prog_header.p_memsz);
     }
   }
   fs_close(fd);
@@ -66,12 +75,25 @@ void context_kload(PCB *pcb, void(*entry)(void *), void *arg) {
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry);
+void protect(AddrSpace *as);
+
+static inline void set_satp(void *pdir) {
+  uintptr_t mode = 1ul << (__riscv_xlen - 1);
+  asm volatile("csrw satp, %0" : : "r"(mode | ((uintptr_t)pdir >> 12)));
+}
 
 void context_uload(PCB *pcb, char *filename, char *const argv[], char *const envp[]) {
+  // alloc root page for a new process
+  protect(&pcb->as);
   // alloc space
   Area kstack;
+  kstack.end = pcb->as.area.end;
+
   size_t nr_page = 8;
-  kstack.end = (void *)(new_page(nr_page) + nr_page * 4096);
+  for (int i = 0; i < nr_page; i++) {
+    void *page_start = new_page(1);
+    map(&pcb->as, kstack.end - (nr_page - i) * PGSIZE, page_start, 1);
+  }
   // parse args
   uint32_t argc = 0, envc = 0;
   while (argv && argv[argc]) argc++;
@@ -108,7 +130,7 @@ void context_uload(PCB *pcb, char *filename, char *const argv[], char *const env
   }
 
   // argc
-  uint32_t *argc_addr = argv_start - 1;
+  volatile uint32_t *argc_addr = argv_start - 1;
   *argc_addr = argc;
 
   // pc entry

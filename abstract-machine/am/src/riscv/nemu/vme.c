@@ -108,5 +108,6 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   // TODO: Now is machine mode. Should have been user mode.
   c->mstatus = 0x1800;
   c->mepc = (uintptr_t)entry;
+  c->pdir = as->ptr;
   return c;
 }

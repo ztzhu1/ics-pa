@@ -28,11 +28,11 @@ void init_proc() {
 
   // char *const argv0[] = {"/bin/exec-test", NULL};
   // char *const envp0[] = {"envp0=foo", NULL};
-  char *const argv1[] = {"a from argv1", NULL};
-  char *const envp1[] = {"envp1=foo", NULL};
+  // char *const argv1[] = {"a from argv1", NULL};
+  // char *const envp1[] = {"envp1=foo", NULL};
   // context_uload(&pcb[0], "/bin/uload-test", argv0, envp0);
-  context_uload(&pcb[0], "/bin/dummy", argv1, envp1);
-  context_uload(&pcb[1], "/bin/dummy", argv1, envp1);
+  context_uload(&pcb[0], "/bin/dummy", NULL, NULL);
+  // context_uload(&pcb[1], "/bin/dummy", argv1, envp1);
 
   // context_uload(&pcb[0], "/bin/exec-test", argv0, NULL);
 
@@ -47,7 +47,8 @@ void init_proc() {
 
 Context* schedule(Context *prev) {
   current->cp = prev;
-  current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+  // current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+  current = &pcb[0];
   return current->cp;
 }
 

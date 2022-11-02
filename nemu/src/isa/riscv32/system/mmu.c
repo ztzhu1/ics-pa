@@ -24,11 +24,13 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
   // helps to locate the final page of physical address
   uint32_t pte2_ptr = (uint32_t)(PTE_PPN(pte1) * PAGE_SIZE + VA_VPN0(vaddr) * PTE_SIZE);
   word_t pte2 = paddr_read(pte2_ptr, 4);
+  // printf("%u, %d\n", PTE_PPN(pte2), pte2 & PTE_V);
+
   assert((pte2 & PTE_V) != 0);
 
   // finally get the pa using leaf PTE
   paddr_t paddr = (paddr_t)(PTE_PPN(pte2) * PAGE_SIZE + VA_OFFSET(vaddr));
 
-  assert(vaddr == paddr);
+  // assert(vaddr == paddr);
   return paddr;
 }
